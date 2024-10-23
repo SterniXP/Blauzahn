@@ -68,10 +68,6 @@ namespace Blauzahn
                 }
             }
             Console.WriteLine(consoleOutput.ToString());
-            //if (args != null && args.Name.StartsWith("LPMSB2-") && !devices.Contains(args))
-            //{
-            //    devices.Add(args);
-            //}
         }
 
         private void DeviceWatcher_Updated(DeviceWatcher sender, DeviceInformationUpdate args)
@@ -104,11 +100,6 @@ namespace Blauzahn
             // Note: BluetoothLEDevice.FromIdAsync must be called from a UI thread because it may prompt for consent.
             BluetoothLEDevice bluetoothLeDevice = await BluetoothLEDevice.FromIdAsync(deviceInfo.Id);
             // ...
-        }
-
-        private void BluetoothDevicesListBox_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
         }
     }
 }

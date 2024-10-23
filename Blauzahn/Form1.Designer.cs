@@ -49,23 +49,23 @@
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.GrowStyle = System.Windows.Forms.TableLayoutPanelGrowStyle.FixedSize;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(2);
+            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 41F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(600, 366);
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 50F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(800, 450);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // connectButton
             // 
             this.connectButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.connectButton.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.connectButton.Location = new System.Drawing.Point(2, 327);
-            this.connectButton.Margin = new System.Windows.Forms.Padding(2);
-            this.connectButton.MaximumSize = new System.Drawing.Size(0, 32);
+            this.connectButton.Location = new System.Drawing.Point(3, 402);
+            this.connectButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.connectButton.MaximumSize = new System.Drawing.Size(0, 39);
             this.connectButton.Name = "connectButton";
-            this.connectButton.Size = new System.Drawing.Size(296, 32);
+            this.connectButton.Size = new System.Drawing.Size(394, 39);
             this.connectButton.TabIndex = 0;
             this.connectButton.Text = "Verbinden";
             this.connectButton.UseVisualStyleBackColor = true;
@@ -74,11 +74,11 @@
             // 
             this.disconnectButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.disconnectButton.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.disconnectButton.Location = new System.Drawing.Point(302, 327);
-            this.disconnectButton.Margin = new System.Windows.Forms.Padding(2);
-            this.disconnectButton.MaximumSize = new System.Drawing.Size(0, 32);
+            this.disconnectButton.Location = new System.Drawing.Point(403, 402);
+            this.disconnectButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.disconnectButton.MaximumSize = new System.Drawing.Size(0, 39);
             this.disconnectButton.Name = "disconnectButton";
-            this.disconnectButton.Size = new System.Drawing.Size(296, 32);
+            this.disconnectButton.Size = new System.Drawing.Size(394, 39);
             this.disconnectButton.TabIndex = 1;
             this.disconnectButton.Text = "Trennen";
             this.disconnectButton.UseVisualStyleBackColor = true;
@@ -91,20 +91,20 @@
             this.tableLayoutPanel1.SetColumnSpan(this.BluetoothDevicesListBox, 2);
             this.BluetoothDevicesListBox.Cursor = System.Windows.Forms.Cursors.Default;
             this.BluetoothDevicesListBox.FormattingEnabled = true;
-            this.BluetoothDevicesListBox.Location = new System.Drawing.Point(2, 2);
-            this.BluetoothDevicesListBox.Margin = new System.Windows.Forms.Padding(2);
+            this.BluetoothDevicesListBox.ItemHeight = 16;
+            this.BluetoothDevicesListBox.Location = new System.Drawing.Point(3, 2);
+            this.BluetoothDevicesListBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.BluetoothDevicesListBox.Name = "BluetoothDevicesListBox";
-            this.BluetoothDevicesListBox.Size = new System.Drawing.Size(596, 316);
+            this.BluetoothDevicesListBox.Size = new System.Drawing.Size(794, 388);
             this.BluetoothDevicesListBox.TabIndex = 2;
-            this.BluetoothDevicesListBox.SelectedIndexChanged += new System.EventHandler(this.BluetoothDevicesListBox_SelectedIndexChanged);
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(600, 366);
+            this.ClientSize = new System.Drawing.Size(800, 450);
             this.Controls.Add(this.tableLayoutPanel1);
-            this.Margin = new System.Windows.Forms.Padding(2);
+            this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "Form1";
             this.Text = "Form1";
             this.tableLayoutPanel1.ResumeLayout(false);
