@@ -1,16 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using Windows.Devices.Bluetooth;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Devices.Enumeration;
+
 
 namespace Blauzahn
 {
@@ -55,19 +50,20 @@ namespace Blauzahn
             if (args.Name == "") { return; }
             StringBuilder consoleOutput = new StringBuilder();
             consoleOutput.Append($"Name: {args.Name}, ID: {args.Id}\n");
+            BluetoothDevicesListBox.Items.Add(args.Name);
             if (args != null && args.Name.StartsWith("LPMSB2-"))
             {
-                consoleOutput.Append(2+"\n");
+                consoleOutput.Append(2 + "\n");
 
                 BluetoothLEDevice device = await BluetoothLEDevice.FromIdAsync(args.Id);
                 GattDeviceServicesResult result = await device.GetGattServicesAsync();
-                consoleOutput.Append(3+"\n");
+                consoleOutput.Append(3 + "\n");
                 if (result.Status == GattCommunicationStatus.Success)
                 {
                     var services = result.Services;
                     foreach (var service in services)
                     {
-                        consoleOutput.Append("UUID: "+service.Uuid+"\n");
+                        consoleOutput.Append("UUID: " + service.Uuid + "\n");
                     }
                 }
             }
@@ -108,6 +104,11 @@ namespace Blauzahn
             // Note: BluetoothLEDevice.FromIdAsync must be called from a UI thread because it may prompt for consent.
             BluetoothLEDevice bluetoothLeDevice = await BluetoothLEDevice.FromIdAsync(deviceInfo.Id);
             // ...
+        }
+
+        private void BluetoothDevicesListBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }
