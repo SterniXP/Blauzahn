@@ -124,24 +124,27 @@
             // 
             // sensorNamesTextBox
             // 
+            this.sensorNamesTextBox.AcceptsReturn = true;
             this.sensorNamesTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.sensorNamesTextBox.Location = new System.Drawing.Point(668, 3);
             this.sensorNamesTextBox.Multiline = true;
             this.sensorNamesTextBox.Name = "sensorNamesTextBox";
+            this.sensorNamesTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.sensorNamesTextBox.Size = new System.Drawing.Size(129, 127);
             this.sensorNamesTextBox.TabIndex = 3;
-            this.sensorNamesTextBox.Text = "LPMS";
+            this.sensorNamesTextBox.TextChanged += new System.EventHandler(this.sensorNamesTextBox_TextChanged);
             // 
             // sensorNamesLabel
             // 
             this.sensorNamesLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.sensorNamesLabel.AutoSize = true;
-            this.sensorNamesLabel.Location = new System.Drawing.Point(535, 38);
+            this.sensorNamesLabel.Location = new System.Drawing.Point(535, 22);
             this.sensorNamesLabel.Name = "sensorNamesLabel";
             this.sensorNamesLabel.Padding = new System.Windows.Forms.Padding(4);
-            this.sensorNamesLabel.Size = new System.Drawing.Size(125, 56);
+            this.sensorNamesLabel.Size = new System.Drawing.Size(125, 88);
             this.sensorNamesLabel.TabIndex = 4;
-            this.sensorNamesLabel.Text = "Sensorenname(n):\r\n(ein Name pro Zeile; z.B. \'LPMS\')\r\n";
+            this.sensorNamesLabel.Text = "Sensorenname(n):\r\n(ein Name pro Zeile; z.B. \'LPMS\') \r\n(filtert die Liste links)\r\n" +
+    "";
             // 
             // saveFormatComboBox
             // 
