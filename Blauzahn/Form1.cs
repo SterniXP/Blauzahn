@@ -236,10 +236,24 @@ namespace Blauzahn
         //    throw new NotImplementedException();
         //}
 
-
+        int _counter = 0;
+        long _startTime;
         void Characteristic_ValueChanged(GattCharacteristic sender, GattValueChangedEventArgs args)
         {
-            printBuffer(args.CharacteristicValue);
+            if (_counter == 0) {
+                _startTime = DateTime.Now.Ticks;
+            }
+            int packetNumber = 500;
+            if (_counter == packetNumber)
+            {
+                long endTime = DateTime.Now.Ticks;
+                Console.WriteLine("Time: " + (endTime - _startTime) / 10000 + "ms (" + _startTime + " - " + endTime + "), Packets: " + _counter);
+                Console.WriteLine("Packets per second: " + packetNumber / (((double)endTime - _startTime) / 10000) * 1000);
+                _counter = -1;
+            }
+            _counter++;
+
+            //printBuffer(args.CharacteristicValue);
         }
 
         void printBuffer(IBuffer buffer)
@@ -247,7 +261,7 @@ namespace Blauzahn
             DataReader reader = DataReader.FromBuffer(buffer);
             byte[] inputBytes = new byte[reader.UnconsumedBufferLength];
             reader.ReadBytes(inputBytes);
-            Console.WriteLine("Raw Data: " + inputBytes);
+            Console.WriteLine("Raw Data: " + BitConverter.ToString(inputBytes));
         }
 
         private int _singleAmount = 0;
@@ -326,7 +340,8 @@ namespace Blauzahn
                 Console.WriteLine("Service: " + service.Uuid + " - " + service.Device.Name + " - " + service.Device.DeviceId);
                 // check if the device has the battery service -- used by LPMS to transfer data
                 // TODO: add a switch / interface to handle different services (optional: based on user input)
-                if (service.Uuid.ToString().StartsWith("26"))
+                //if (service.Uuid.ToString().StartsWith(BATTERY_SERVICE_UUID_PREFIX))
+                if (service.Uuid.ToString().StartsWith(BATTERY_SERVICE_UUID_PREFIX))
                 {
                     await SubscribeToNotifyingCharacterristics(service);
                 }
@@ -342,11 +357,14 @@ namespace Blauzahn
             {
                 foreach (var characteristic in characteristicsResult.Characteristics)
                 {
-                    Console.WriteLine("Characteristic Flags: " + characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Read)
-                                                               + characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify)
-                                                               + characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Write));
+                    Console.WriteLine("Characteristic Flags: Read: " + characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Read)
+                                                         +", Notify: "+ characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify)
+                                                         +", Write: "+ characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Write));
+
                     if (characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
                     {
+                        //GattWriteResult status = await characteristic.WriteClientCharacteristicConfigurationDescriptorWithResultAsync(
+                        //        GattClientCharacteristicConfigurationDescriptorValue.Notify);
                         GattCommunicationStatus status = await characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(
                             GattClientCharacteristicConfigurationDescriptorValue.Notify);
                         if (status == GattCommunicationStatus.Success)
@@ -380,7 +398,11 @@ namespace Blauzahn
             DeviceInformation deviceInfo = null;
             try
             {
-                deviceInfo = (DeviceInformation)BluetoothDevicesListBox.SelectedItem;
+                int index = BluetoothDevicesListBox.SelectedIndex;
+                if (index > -1 && index < BluetoothDevicesListBox.Items.Count)
+                {
+                    deviceInfo = (DeviceInformation)BluetoothDevicesListBox.SelectedItem;
+                }
             }
             catch (IndexOutOfRangeException) { }
             if (deviceInfo != null)
