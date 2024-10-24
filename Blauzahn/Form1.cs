@@ -264,27 +264,28 @@ namespace Blauzahn
             // ...
         }
 
+        async void DisonnectDevice(DeviceInformation deviceInfo)
+        {
+
+            // Note: BluetoothLEDevice.FromIdAsync must be called from a UI thread because it may prompt for consent.
+            BluetoothLEDevice bluetoothLeDevice = await BluetoothLEDevice.FromIdAsync(deviceInfo.Id);
+            bluetoothLeDevice.Dispose();
+        }
+
         private void BluetoothDevicesListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
 
         }
         private void connectButton_Click(object sender, EventArgs e)
         {
-
             string selectedDeviceName = BluetoothDevicesListBox.GetItemText(BluetoothDevicesListBox.SelectedItem);
-            Console.WriteLine("Funktion aufgerufen");
             if (selectedDeviceName != null && deviceDictionary.ContainsKey(selectedDeviceName))
             {
-                // Hole das zugehörige DeviceInformation-Objekt aus dem Dictionary
                 DeviceInformation selectedDevice = deviceDictionary[selectedDeviceName];
-                Console.WriteLine(selectedDeviceName);
-                Console.WriteLine(selectedDevice.Id);
-                // Verbinde mit dem ausgewählten Gerät
                 ConnectDevice(selectedDevice);
             }
             else {
-                Console.WriteLine("Der gerätename ist NULL");
-                return;
+                throw new KeyNotFoundException("Der Grätename ist NULL oder nicht im Dictionary enthalten");
             }
 
         }
