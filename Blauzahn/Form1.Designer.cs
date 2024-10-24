@@ -59,24 +59,25 @@
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.GrowStyle = System.Windows.Forms.TableLayoutPanelGrowStyle.FixedSize;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(2);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 4;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 50F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(800, 450);
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 41F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(600, 366);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // outputFormatLabel
             // 
             this.outputFormatLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.outputFormatLabel.AutoSize = true;
-            this.outputFormatLabel.Location = new System.Drawing.Point(535, 187);
+            this.outputFormatLabel.Location = new System.Drawing.Point(402, 152);
+            this.outputFormatLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.outputFormatLabel.Name = "outputFormatLabel";
-            this.outputFormatLabel.Padding = new System.Windows.Forms.Padding(4);
-            this.outputFormatLabel.Size = new System.Drawing.Size(117, 24);
+            this.outputFormatLabel.Padding = new System.Windows.Forms.Padding(3);
+            this.outputFormatLabel.Size = new System.Drawing.Size(93, 19);
             this.outputFormatLabel.TabIndex = 5;
             this.outputFormatLabel.Text = "Speicher Format:";
             // 
@@ -84,11 +85,11 @@
             // 
             this.connectButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.connectButton.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.connectButton.Location = new System.Drawing.Point(3, 401);
-            this.connectButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.connectButton.MaximumSize = new System.Drawing.Size(0, 39);
+            this.connectButton.Location = new System.Drawing.Point(2, 326);
+            this.connectButton.Margin = new System.Windows.Forms.Padding(2);
+            this.connectButton.MaximumSize = new System.Drawing.Size(0, 32);
             this.connectButton.Name = "connectButton";
-            this.connectButton.Size = new System.Drawing.Size(260, 39);
+            this.connectButton.Size = new System.Drawing.Size(196, 32);
             this.connectButton.TabIndex = 0;
             this.connectButton.Text = "Verbinden";
             this.connectButton.UseVisualStyleBackColor = true;
@@ -98,11 +99,11 @@
             // 
             this.disconnectButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.disconnectButton.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.disconnectButton.Location = new System.Drawing.Point(269, 401);
-            this.disconnectButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.disconnectButton.MaximumSize = new System.Drawing.Size(0, 39);
+            this.disconnectButton.Location = new System.Drawing.Point(202, 326);
+            this.disconnectButton.Margin = new System.Windows.Forms.Padding(2);
+            this.disconnectButton.MaximumSize = new System.Drawing.Size(0, 32);
             this.disconnectButton.Name = "disconnectButton";
-            this.disconnectButton.Size = new System.Drawing.Size(260, 39);
+            this.disconnectButton.Size = new System.Drawing.Size(196, 32);
             this.disconnectButton.TabIndex = 1;
             this.disconnectButton.Text = "Trennen";
             this.disconnectButton.UseVisualStyleBackColor = true;
@@ -115,21 +116,22 @@
             this.tableLayoutPanel1.SetColumnSpan(this.BluetoothDevicesListBox, 2);
             this.BluetoothDevicesListBox.Cursor = System.Windows.Forms.Cursors.Default;
             this.BluetoothDevicesListBox.FormattingEnabled = true;
-            this.BluetoothDevicesListBox.ItemHeight = 16;
-            this.BluetoothDevicesListBox.Location = new System.Drawing.Point(3, 2);
-            this.BluetoothDevicesListBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.BluetoothDevicesListBox.Location = new System.Drawing.Point(2, 2);
+            this.BluetoothDevicesListBox.Margin = new System.Windows.Forms.Padding(2);
             this.BluetoothDevicesListBox.Name = "BluetoothDevicesListBox";
             this.tableLayoutPanel1.SetRowSpan(this.BluetoothDevicesListBox, 3);
-            this.BluetoothDevicesListBox.Size = new System.Drawing.Size(526, 388);
+            this.BluetoothDevicesListBox.Size = new System.Drawing.Size(396, 316);
             this.BluetoothDevicesListBox.TabIndex = 2;
+            this.BluetoothDevicesListBox.SelectedIndexChanged += new System.EventHandler(this.BluetoothDevicesListBox_SelectedIndexChanged);
             // 
             // sensorNamesTextBox
             // 
             this.sensorNamesTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.sensorNamesTextBox.Location = new System.Drawing.Point(668, 3);
+            this.sensorNamesTextBox.Location = new System.Drawing.Point(501, 2);
+            this.sensorNamesTextBox.Margin = new System.Windows.Forms.Padding(2);
             this.sensorNamesTextBox.Multiline = true;
             this.sensorNamesTextBox.Name = "sensorNamesTextBox";
-            this.sensorNamesTextBox.Size = new System.Drawing.Size(129, 127);
+            this.sensorNamesTextBox.Size = new System.Drawing.Size(97, 104);
             this.sensorNamesTextBox.TabIndex = 3;
             this.sensorNamesTextBox.Text = "LPMS";
             // 
@@ -137,10 +139,11 @@
             // 
             this.sensorNamesLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.sensorNamesLabel.AutoSize = true;
-            this.sensorNamesLabel.Location = new System.Drawing.Point(535, 38);
+            this.sensorNamesLabel.Location = new System.Drawing.Point(402, 18);
+            this.sensorNamesLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.sensorNamesLabel.Name = "sensorNamesLabel";
-            this.sensorNamesLabel.Padding = new System.Windows.Forms.Padding(4);
-            this.sensorNamesLabel.Size = new System.Drawing.Size(125, 56);
+            this.sensorNamesLabel.Padding = new System.Windows.Forms.Padding(3);
+            this.sensorNamesLabel.Size = new System.Drawing.Size(93, 71);
             this.sensorNamesLabel.TabIndex = 4;
             this.sensorNamesLabel.Text = "Sensorenname(n):\r\n(ein Name pro Zeile; z.B. \'LPMS\')\r\n";
             // 
@@ -151,18 +154,19 @@
             this.saveFormatComboBox.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
             this.saveFormatComboBox.Cursor = System.Windows.Forms.Cursors.Default;
             this.saveFormatComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.saveFormatComboBox.Location = new System.Drawing.Point(668, 187);
+            this.saveFormatComboBox.Location = new System.Drawing.Point(501, 151);
+            this.saveFormatComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.saveFormatComboBox.Name = "saveFormatComboBox";
-            this.saveFormatComboBox.Size = new System.Drawing.Size(129, 24);
+            this.saveFormatComboBox.Size = new System.Drawing.Size(97, 21);
             this.saveFormatComboBox.TabIndex = 6;
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(600, 366);
             this.Controls.Add(this.tableLayoutPanel1);
-            this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "Form1";
             this.Text = "Form1";
             this.tableLayoutPanel1.ResumeLayout(false);

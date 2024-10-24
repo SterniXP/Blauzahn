@@ -1,12 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Windows.Forms;
+using System.Xml.Linq;
 using Windows.Devices.Bluetooth;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Devices.Enumeration;
 using Windows.Storage.Streams;
+using static System.Net.Mime.MediaTypeNames;
+using Windows.UI.Xaml.Controls;
 
 
 namespace Blauzahn
@@ -14,13 +19,14 @@ namespace Blauzahn
     public partial class Form1 : Form
     {
         private const string BATTERY_SERVICE_UUID_PREFIX = "0000180f";
-
         private DeviceWatcher deviceWatcher;
         private readonly ObservableCollection<BluetoothDevice> devices = new ObservableCollection<BluetoothDevice>();
+        private Dictionary<string, DeviceInformation> deviceDictionary = new Dictionary<string, DeviceInformation>();
 
         public Form1()
         {
             InitializeComponent();
+            BluetoothDevicesListBox.DisplayMember = "Name";
             deviceWatcher = CreateBLEWatcher();
             deviceWatcher.Start();
             populateOutputComboBox();
@@ -57,13 +63,38 @@ namespace Blauzahn
             return watcher;
         }
 
+        /// <summary>
+        /// Gets Called, when a new Device is Detected
+        /// </summary>
+        /// <param name="sender">The Device-Watcher, which found the Device</param>
+        /// <param name="args">More Device Information from the found Device</param>
         private async void DeviceWatcher_Added(DeviceWatcher sender, DeviceInformation args)
         {
+
             if (args.Name == "") { return; }
             StringBuilder consoleOutput = new StringBuilder();
             consoleOutput.Append($"Name: {args.Name}, ID: {args.Id}\n");
-            BluetoothDevicesListBox.Items.Add(args.Name);
+            deviceDictionary[args.Name] = args;
 
+
+            if (BluetoothDevicesListBox.InvokeRequired)
+            {
+                BluetoothDevicesListBox.Invoke(new Action(() =>
+                {
+                    // Füge das DeviceInformation-Objekt der ListBox hinzu
+                    BluetoothDevicesListBox.Items.Add(args.Name);
+                }));
+            }
+            else
+            {
+                BluetoothDevicesListBox.Items.Add(args.Name);
+            }
+
+
+            //BluetoothDevicesListBox.Items.Add(args.Name);
+
+            //TODO: Change Filtering to Advertisment watcher
+            // https://learn.microsoft.com/en-us/windows/uwp/devices-sensors/ble-beacon
             if (args != null && args.Name.StartsWith("LPMSB2-"))
             {
                 bool isNamedSensor = false;
@@ -80,6 +111,7 @@ namespace Blauzahn
                 }
                 consoleOutput.Append(2 + "\n");
 
+                //Retrieve Services from BLE Device
                 BluetoothLEDevice device = await BluetoothLEDevice.FromIdAsync(args.Id);
                 GattDeviceServicesResult result = await device.GetGattServicesAsync();
                 consoleOutput.Append(3 + "\n");
@@ -92,6 +124,7 @@ namespace Blauzahn
                         if (service.Uuid.ToString().StartsWith(BATTERY_SERVICE_UUID_PREFIX))
                         {
                             consoleOutput.Append(4 + "\n");
+                            //Get BLE Device Characteristics
                             var characteristicsResult = await service.GetCharacteristicsAsync();
                             if (characteristicsResult.Status == GattCommunicationStatus.Success)
                             {
@@ -145,8 +178,14 @@ namespace Blauzahn
             //throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Gets Called, when a previously found Device is not available anymore
+        /// </summary>
+        /// <param name="sender">The Devicewatcher</param>
+        /// <param name="args">More Information about the removed Device</param>
         private void DeviceWatcher_Removed(DeviceWatcher sender, DeviceInformationUpdate args)
         {
+
             // TODO: dispose and remove from list
             //bluetoothLeDevice.Dispose();
             //throw new NotImplementedException();
@@ -168,6 +207,7 @@ namespace Blauzahn
         private int singleAmount = 0;
         private StringBuilder rawDataBuilder = new StringBuilder();
         private StringBuilder singleDataBuilder = new StringBuilder();
+        //Called, when new Notifications / Pakets arrive
         void Characteristic_ValueChanged(GattCharacteristic sender, GattValueChangedEventArgs args)
         {
             try
@@ -218,6 +258,7 @@ namespace Blauzahn
 
         async void ConnectDevice(DeviceInformation deviceInfo)
         {
+
             // Note: BluetoothLEDevice.FromIdAsync must be called from a UI thread because it may prompt for consent.
             BluetoothLEDevice bluetoothLeDevice = await BluetoothLEDevice.FromIdAsync(deviceInfo.Id);
             // ...
@@ -227,11 +268,25 @@ namespace Blauzahn
         {
 
         }
-
         private void connectButton_Click(object sender, EventArgs e)
         {
-            //ConnectDevice();
-        }
 
+            string selectedDeviceName = BluetoothDevicesListBox.GetItemText(BluetoothDevicesListBox.SelectedItem);
+            Console.WriteLine("Funktion aufgerufen");
+            if (selectedDeviceName != null && deviceDictionary.ContainsKey(selectedDeviceName))
+            {
+                // Hole das zugehörige DeviceInformation-Objekt aus dem Dictionary
+                DeviceInformation selectedDevice = deviceDictionary[selectedDeviceName];
+                Console.WriteLine(selectedDeviceName);
+                Console.WriteLine(selectedDevice.Id);
+                // Verbinde mit dem ausgewählten Gerät
+                ConnectDevice(selectedDevice);
+            }
+            else {
+                Console.WriteLine("Der gerätename ist NULL");
+                return;
+            }
+
+        }
     }
 }
