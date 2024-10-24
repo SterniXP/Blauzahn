@@ -89,7 +89,7 @@ namespace Blauzahn
             {
                 BluetoothDevicesListBox.Items.Add(args.Name);
             }
-
+            return;
             //TODO: Change Filtering to Advertisment watcher
             // https://learn.microsoft.com/en-us/windows/uwp/devices-sensors/ble-beacon
             if (args != null && args.Name.StartsWith("LPMSB2-"))
