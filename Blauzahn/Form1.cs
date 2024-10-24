@@ -90,9 +90,6 @@ namespace Blauzahn
                 BluetoothDevicesListBox.Items.Add(args.Name);
             }
 
-
-            //BluetoothDevicesListBox.Items.Add(args.Name);
-
             //TODO: Change Filtering to Advertisment watcher
             // https://learn.microsoft.com/en-us/windows/uwp/devices-sensors/ble-beacon
             if (args != null && args.Name.StartsWith("LPMSB2-"))
@@ -270,13 +267,13 @@ namespace Blauzahn
         private void connectButton_Click(object sender, EventArgs e)
         {
             string selectedDeviceName = BluetoothDevicesListBox.GetItemText(BluetoothDevicesListBox.SelectedItem);
-            if (selectedDeviceName == null || selectedDeviceName == "")
+            if (selectedDeviceName == null)
             {
-                throw new ArgumentNullException("Der Grätename ist NULL");
+                throw new ArgumentNullException("Der Gerätename ist NULL");
             }
-            else if (deviceDictionary.ContainsKey(selectedDeviceName))
+            else if (!deviceDictionary.ContainsKey(selectedDeviceName))
             {
-                throw new KeyNotFoundException("Der Grätename ist nicht im DeviceDictionary enthalten");
+                throw new KeyNotFoundException("Der Gerätename ist nicht im DeviceDictionary enthalten");
             }
             else {
                 DeviceInformation selectedDevice = deviceDictionary[selectedDeviceName];
@@ -287,13 +284,13 @@ namespace Blauzahn
         private void disconnectButton_Click(object sender, EventArgs e)
         {
             string selectedDeviceName = BluetoothDevicesListBox.GetItemText(BluetoothDevicesListBox.SelectedItem);
-            if (selectedDeviceName == null || selectedDeviceName == "")
+            if (selectedDeviceName == null)
             {
-                throw new ArgumentNullException("Der Grätename ist NULL");
+                throw new ArgumentNullException("Der Gerätename ist NULL");
             }
-            else if (deviceDictionary.ContainsKey(selectedDeviceName))
+            else if (!deviceDictionary.ContainsKey(selectedDeviceName))
             {
-                throw new KeyNotFoundException("Der Grätename ist nicht im DeviceDictionary enthalten");
+                throw new KeyNotFoundException("Der Gerätename ist nicht im DeviceDictionary enthalten");
             }
             else
             {
