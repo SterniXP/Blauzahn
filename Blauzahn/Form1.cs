@@ -51,6 +51,7 @@ namespace Blauzahn
             StringBuilder consoleOutput = new StringBuilder();
             consoleOutput.Append($"Name: {args.Name}, ID: {args.Id}\n");
             BluetoothDevicesListBox.Items.Add(args.Name);
+
             if (args != null && args.Name.StartsWith("LPMSB2-"))
             {
                 consoleOutput.Append(2 + "\n");
@@ -109,6 +110,11 @@ namespace Blauzahn
         private void BluetoothDevicesListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
 
+        }
+
+        private void connectButton_Click(object sender, EventArgs e)
+        {
+            //ConnectDevice();
         }
     }
 }

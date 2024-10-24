@@ -69,6 +69,7 @@
             this.connectButton.TabIndex = 0;
             this.connectButton.Text = "Verbinden";
             this.connectButton.UseVisualStyleBackColor = true;
+            this.connectButton.Click += new System.EventHandler(this.connectButton_Click);
             // 
             // disconnectButton
             // 
