@@ -237,20 +237,35 @@ namespace Blauzahn
         //}
 
 
-        private int singleAmount = 0;
-        private StringBuilder rawDataBuilder = new StringBuilder();
-        private StringBuilder singleDataBuilder = new StringBuilder();
         void Characteristic_ValueChanged(GattCharacteristic sender, GattValueChangedEventArgs args)
+        {
+            printBuffer(args.CharacteristicValue);
+        }
+
+        void printBuffer(IBuffer buffer)
+        {
+            DataReader reader = DataReader.FromBuffer(buffer);
+            byte[] inputBytes = new byte[reader.UnconsumedBufferLength];
+            reader.ReadBytes(inputBytes);
+            Console.WriteLine("Raw Data: " + inputBytes);
+        }
+
+        private int _singleAmount = 0;
+        private readonly StringBuilder _rawDataBuilder = new StringBuilder();
+        private readonly StringBuilder _singleDataBuilder = new StringBuilder();
+        void Characteristic_ValueChanged2(GattCharacteristic sender, GattValueChangedEventArgs args)
         {
             try
             {
-                if (singleAmount >= 20)
+                if (_singleAmount >= 20)
                 {
                     Console.WriteLine("Time: " + DateTime.Now.ToString());
-                    Console.WriteLine("Raw data: "+rawDataBuilder.ToString());
-                    rawDataBuilder.Clear();
-                    Console.WriteLine("Single data:" + singleDataBuilder.ToString());
-                    singleAmount = 0;
+                    Console.WriteLine("Raw data: "+_rawDataBuilder.ToString());
+                    _rawDataBuilder.Clear();
+                    Console.WriteLine("Single data:" + _singleDataBuilder.ToString());
+                    _singleAmount = 0;
+                    _rawDataBuilder.Clear();
+                    _singleDataBuilder.Clear();
                 }
                 // An Indicate or Notify reported that the value has changed.
                 var reader = DataReader.FromBuffer(args.CharacteristicValue);
@@ -262,17 +277,17 @@ namespace Blauzahn
                 reader.ReadBytes(inputBytes);
 
                 // Output the raw data as a hexadecimal string
-                rawDataBuilder.Append(BitConverter.ToString(inputBytes));
+                _rawDataBuilder.Append(BitConverter.ToString(inputBytes));
 
                 // Process each byte as an individual value
                 // TODO: add a switch / interface to handle different data types (optional: based on user input)
                 for (int j = 1; j <= inputBytes.Length; j += sizeof(Single))
                 {
-                    singleAmount++;
+                    _singleAmount++;
                     int i = j - 1;
                     if (i + sizeof(Single) <= inputBytes.Length)
                     {
-                        singleDataBuilder.Append(" " + BitConverter.ToSingle(inputBytes, i));
+                        _singleDataBuilder.Append(" " + BitConverter.ToSingle(inputBytes, i));
                     }
                 }
             }
@@ -281,11 +296,6 @@ namespace Blauzahn
                 Console.WriteLine("Error reading data: " + ex.Message);
                 // Handle or log the exception as needed
             }
-        }
-
-        private void Characteristic_ValueChanged2(GattCharacteristic sender, GattValueChangedEventArgs args)
-        {
-            Console.WriteLine("parallel<-------------------------------");
         }
 
         private async void ConnectDevice(DeviceInformation deviceInfo)
@@ -298,18 +308,25 @@ namespace Blauzahn
             // check if the device has services
             if (result.Status == GattCommunicationStatus.Success)
             {
+                Console.WriteLine("Device: " + device.Name + " - " + device.DeviceId);
                 await SubscribeToDataServices(result);
+            }
+            else
+            {
+                Console.WriteLine("Error connecting to device: " + result.Status);
             }
         }
 
         private async Task SubscribeToDataServices(GattDeviceServicesResult result)
         {
+            Console.WriteLine("Subscribing to data services");
             var services = result.Services;
             foreach (var service in services)
             {
+                Console.WriteLine("Service: " + service.Uuid + " - " + service.Device.Name + " - " + service.Device.DeviceId);
                 // check if the device has the battery service -- used by LPMS to transfer data
                 // TODO: add a switch / interface to handle different services (optional: based on user input)
-                if (service.Uuid.ToString().StartsWith(BATTERY_SERVICE_UUID_PREFIX))
+                if (service.Uuid.ToString().StartsWith("26"))
                 {
                     await SubscribeToNotifyingCharacterristics(service);
                 }
@@ -318,11 +335,16 @@ namespace Blauzahn
 
         private async Task SubscribeToNotifyingCharacterristics(GattDeviceService service)
         {
+            Console.WriteLine("Subscribing to notifying characteristics");
             var characteristicsResult = await service.GetCharacteristicsAsync();
+            Console.WriteLine("Characteristics status: " + characteristicsResult.Status + ", characteristic: " + characteristicsResult.Characteristics);
             if (characteristicsResult.Status == GattCommunicationStatus.Success)
             {
                 foreach (var characteristic in characteristicsResult.Characteristics)
                 {
+                    Console.WriteLine("Characteristic Flags: " + characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Read)
+                                                               + characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify)
+                                                               + characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Write));
                     if (characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
                     {
                         GattCommunicationStatus status = await characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(
@@ -331,6 +353,11 @@ namespace Blauzahn
                         {
                             SubscribeToAcceptedCharacteristic(characteristic);
                         }
+                    }
+                    if (characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Read))
+                    {
+                        var data = await characteristic.ReadValueAsync();
+                        printBuffer(data.Value);
                     }
                     // write / read characteristics here if necessary
                 }
@@ -346,6 +373,20 @@ namespace Blauzahn
         private void sensorNamesTextBox_TextChanged(object sender, EventArgs e)
         {
             // TODO: update filter and filter devicesView with updated filter
+        }
+
+        private void connectButton_Click(object sender, EventArgs e)
+        {
+            DeviceInformation deviceInfo = null;
+            try
+            {
+                deviceInfo = (DeviceInformation)BluetoothDevicesListBox.SelectedItem;
+            }
+            catch (IndexOutOfRangeException) { }
+            if (deviceInfo != null)
+            {
+                ConnectDevice(deviceInfo);
+            }
         }
     }
 }
