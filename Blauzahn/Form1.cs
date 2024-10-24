@@ -156,7 +156,6 @@ namespace Blauzahn
                                             consoleOutput.Append("Added listener \n");
                                             // Server has been informed of clients interest.
                                             characteristic.ValueChanged += Characteristic_ValueChanged;
-                                            characteristic.ValueChanged += Characteristic_ValueChanged2;
                                         }
                                     } 
                                     else
@@ -251,21 +250,14 @@ namespace Blauzahn
             }
         }
 
-        void Characteristic_ValueChanged2(GattCharacteristic sender, GattValueChangedEventArgs args)
-        {
-            Console.WriteLine("parallel<-------------------------------");
-        }
-
         async void ConnectDevice(DeviceInformation deviceInfo)
         {
-
             // Note: BluetoothLEDevice.FromIdAsync must be called from a UI thread because it may prompt for consent.
             BluetoothLEDevice bluetoothLeDevice = await BluetoothLEDevice.FromIdAsync(deviceInfo.Id);
         }
 
-        async void DisonnectDevice(DeviceInformation deviceInfo)
+        async void DisconnectDevice(DeviceInformation deviceInfo)
         {
-
             // Note: BluetoothLEDevice.FromIdAsync must be called from a UI thread because it may prompt for consent.
             BluetoothLEDevice bluetoothLeDevice = await BluetoothLEDevice.FromIdAsync(deviceInfo.Id);
             bluetoothLeDevice.Dispose();
@@ -290,6 +282,26 @@ namespace Blauzahn
                 DeviceInformation selectedDevice = deviceDictionary[selectedDeviceName];
                 ConnectDevice(selectedDevice);
             }
+        }
+
+        private void disconnectButton_Click(object sender, EventArgs e)
+        {
+            string selectedDeviceName = BluetoothDevicesListBox.GetItemText(BluetoothDevicesListBox.SelectedItem);
+            if (selectedDeviceName == null || selectedDeviceName == "")
+            {
+                throw new ArgumentNullException("Der Grätename ist NULL");
+            }
+            else if (deviceDictionary.ContainsKey(selectedDeviceName))
+            {
+                throw new KeyNotFoundException("Der Grätename ist nicht im DeviceDictionary enthalten");
+            }
+            else
+            {
+                DeviceInformation selectedDevice = deviceDictionary[selectedDeviceName];
+                DisconnectDevice(selectedDevice);
+                deviceDictionary.Remove(selectedDeviceName);
+            }
+
         }
     }
 }
