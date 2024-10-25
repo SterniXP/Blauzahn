@@ -1,24 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Xml.Linq;
 using Windows.Devices.Bluetooth;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Devices.Enumeration;
 using Windows.Storage.Streams;
-using static System.Net.Mime.MediaTypeNames;
-using Windows.UI.Xaml.Controls;
 
 
 namespace Blauzahn
 {
+    public class BleUuidServicePrefix
+    {
+        public string Value { get; }
+
+        public BleUuidServicePrefix(string value)
+        {
+            Value = value;
+        }
+    }
+
+
     public partial class Form1 : Form
     {
-        private const string BATTERY_SERVICE_UUID_PREFIX = "0000180f";
+
+        public static readonly BleUuidServicePrefix BATTERY_SERVICE = new BleUuidServicePrefix("0000180f");
         private DeviceWatcher deviceWatcher;
         private readonly ObservableCollection<BluetoothDevice> devices = new ObservableCollection<BluetoothDevice>();
         private Dictionary<string, DeviceInformation> deviceDictionary = new Dictionary<string, DeviceInformation>();
@@ -89,7 +97,7 @@ namespace Blauzahn
             {
                 BluetoothDevicesListBox.Items.Add(args.Name);
             }
-            return;
+
             //TODO: Change Filtering to Advertisment watcher
             // https://learn.microsoft.com/en-us/windows/uwp/devices-sensors/ble-beacon
             if (args != null && args.Name.StartsWith("LPMSB2-"))
@@ -112,53 +120,49 @@ namespace Blauzahn
                 BluetoothLEDevice device = await BluetoothLEDevice.FromIdAsync(args.Id);
                 GattDeviceServicesResult result = await device.GetGattServicesAsync();
                 consoleOutput.Append(3 + "\n");
-                if (result.Status == GattCommunicationStatus.Success)
+                if (result.Status != GattCommunicationStatus.Success)
                 {
-                    var services = result.Services;
-                    foreach (var service in services)
-                    {
-                        consoleOutput.Append("UUID: " + service.Uuid);
-                        if (service.Uuid.ToString().StartsWith(BATTERY_SERVICE_UUID_PREFIX))
-                        {
-                            consoleOutput.Append(4 + "\n");
-                            //Get BLE Device Characteristics
-                            var characteristicsResult = await service.GetCharacteristicsAsync();
-                            if (characteristicsResult.Status == GattCommunicationStatus.Success)
-                            {
-                                consoleOutput.Append(5 + "\n");
-                                var characteristics = characteristicsResult.Characteristics;
-                                foreach (var characteristic in characteristics)
-                                {
-                                    consoleOutput.Append("Characteristic: " + characteristic + "\n");
-                                    GattCharacteristicProperties properties = characteristic.CharacteristicProperties;
+                    throw new ConnectionFailedException("Failed to Connect to Device. ConnectionStatus: " + result.Status.ToString());
+                }
 
-                                    //if (properties.HasFlag(GattCharacteristicProperties.Read))
-                                    //{
-                                    //    // This characteristic supports reading from it.
-                                    //    consoleOutput.Append("Has Read property \n");
-                                    //}
-                                    //if (properties.HasFlag(GattCharacteristicProperties.Write))
-                                    //{
-                                    //    // This characteristic supports writing to it.
-                                    //    consoleOutput.Append("Has Write property \n");
-                                    //}
-                                    if (properties.HasFlag(GattCharacteristicProperties.Notify))
+                var services = result.Services;
+                foreach (GattDeviceService service in services)
+                {
+                    consoleOutput.Append("UUID: " + service.Uuid);
+                    if (BLEServiceHasPrefix(service, UuidPrefixes.BATTERY_PREFIX))
+                    {
+                        //Get BLE Device Characteristics
+                        GattCharacteristicsResult characteristicsResult = await service.GetCharacteristicsAsync();
+                        if (characteristicsResult.Status == GattCommunicationStatus.Success)
+                        {
+                            IReadOnlyList<GattCharacteristic> characteristics = characteristicsResult.Characteristics;
+                            foreach (var characteristic in characteristics)
+                            {
+
+                                //if (properties.HasFlag(GattCharacteristicProperties.Read))
+                                //{
+                                //    // This characteristic supports reading from it.
+                                //    consoleOutput.Append("Has Read property \n");
+                                //}
+                                //if (properties.HasFlag(GattCharacteristicProperties.Write))
+                                //{
+                                //    // This characteristic supports writing to it.
+                                //    consoleOutput.Append("Has Write property \n");
+                                //}
+                                if (characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
+                                {
+                                    // This characteristic supports subscribing to notifications.
+                                    consoleOutput.Append("Has Notify property \n");
+                                    if (await connectToCharacteristic(characteristic, GattClientCharacteristicConfigurationDescriptorValue.Notify) == GattCommunicationStatus.Success)
                                     {
-                                        // This characteristic supports subscribing to notifications.
-                                        consoleOutput.Append("Has Notify property \n");
-                                        GattCommunicationStatus status = await characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(
-                                            GattClientCharacteristicConfigurationDescriptorValue.Notify);
-                                        if (status == GattCommunicationStatus.Success)
-                                        {
-                                            consoleOutput.Append("Added listener \n");
-                                            // Server has been informed of clients interest.
-                                            characteristic.ValueChanged += Characteristic_ValueChanged;
-                                        }
-                                    } 
-                                    else
-                                    {
-                                        // ignore this device (either broken or of unknown design)
+                                        consoleOutput.Append("Added listener \n");
+                                        // Server has been informed of clients interest.
+                                        characteristic.ValueChanged += Characteristic_ValueChanged;
                                     }
+                                }
+                                else
+                                {
+                                    // ignore this device (either broken or of unknown design)
                                 }
                             }
                         }
@@ -166,6 +170,32 @@ namespace Blauzahn
                 }
             }
             Console.WriteLine(consoleOutput.ToString());
+        }
+        /// <summary>
+        /// This function tries to connect with the givien configurationDescriptor on the given BLE-Device Characteristic
+        /// </summary>
+        /// <param name="characteristic">The Caracteristic to Subscribe to</param>
+        /// <param name="configurationDescriptor">The Configuration-Descriptor of the given Characteristic. Can be None, Notify, Indicate or NotifyAndIndicate</param>
+        /// <returns>Returns the ConnectionStatus after the Connection attempt </returns>
+        private async Task<GattCommunicationStatus> connectToCharacteristic(GattCharacteristic characteristic, GattClientCharacteristicConfigurationDescriptorValue configurationDescriptor)
+        {
+            return await characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(configurationDescriptor);
+        }
+
+        private bool BLEServiceHasPrefix(GattDeviceService service, string prefix)
+        {
+            return service.Uuid.ToString().StartsWith(prefix);
+        }
+
+        public class ConnectionFailedException : Exception
+        {
+            public ConnectionFailedException() { }
+
+            public ConnectionFailedException(string message)
+                : base(message) { }
+
+            public ConnectionFailedException(string message, Exception innerException)
+                : base(message, innerException) { }
         }
 
         private void DeviceWatcher_Updated(DeviceWatcher sender, DeviceInformationUpdate args)
@@ -211,7 +241,7 @@ namespace Blauzahn
                 if (singleAmount >= 20)
                 {
                     Console.WriteLine("Time: " + DateTime.Now.ToString());
-                    Console.WriteLine("Raw data: "+rawDataBuilder.ToString());
+                    Console.WriteLine("Raw data: " + rawDataBuilder.ToString());
                     rawDataBuilder.Clear();
                     Console.WriteLine("Single data:" + singleDataBuilder.ToString());
                     singleAmount = 0;
@@ -275,7 +305,8 @@ namespace Blauzahn
             {
                 throw new KeyNotFoundException("Der Gerätename ist nicht im DeviceDictionary enthalten");
             }
-            else {
+            else
+            {
                 DeviceInformation selectedDevice = deviceDictionary[selectedDeviceName];
                 ConnectDevice(selectedDevice);
             }
