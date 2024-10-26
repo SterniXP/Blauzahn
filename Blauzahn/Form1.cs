@@ -113,7 +113,17 @@ namespace Blauzahn
 
         private void BindDevicesViewToListBox()
         {
-            BluetoothDevicesListBox.DataSource = devicesView;
+            if (BluetoothDevicesListBox.InvokeRequired)
+            {
+                BluetoothDevicesListBox.Invoke(new MethodInvoker(delegate
+                {
+                    BluetoothDevicesListBox.DataSource = devicesView;
+                }));
+            }
+            else
+            {
+                BluetoothDevicesListBox.DataSource = devicesView;
+            }
             BluetoothDevicesListBox.Format += new ListControlConvertEventHandler(ListBox_Format);
             devicesView.CollectionChanged += (s, e) =>
             {
@@ -238,20 +248,87 @@ namespace Blauzahn
 
         int _counter = 0;
         long _startTime;
+        int _packetCounter = 0;
+        static int _packetNumber = 1111;
+        static int _packetSize = 1;
+        double[,] _data = new double[_packetSize, _packetNumber];
+        int _maxPacketSize = 60;
+        int _errorCounter = 0;
         void Characteristic_ValueChanged(GattCharacteristic sender, GattValueChangedEventArgs args)
         {
-            if (_counter == 0) {
-                _startTime = DateTime.Now.Ticks;
-            }
-            int packetNumber = 500;
-            if (_counter == packetNumber)
+            if (args.CharacteristicValue.Length != 20)
             {
-                long endTime = DateTime.Now.Ticks;
-                Console.WriteLine("Time: " + (endTime - _startTime) / 10000 + "ms (" + _startTime + " - " + endTime + "), Packets: " + _counter);
-                Console.WriteLine("Packets per second: " + packetNumber / (((double)endTime - _startTime) / 10000) * 1000);
-                _counter = -1;
+                _errorCounter++;
+                return;
             }
-            _counter++;
+            DataReader reader = DataReader.FromBuffer(args.CharacteristicValue);
+            byte[] inputBytes = new byte[reader.UnconsumedBufferLength];
+            reader.ReadBytes(inputBytes);
+            for (int i = 0; i < inputBytes.Length; i += sizeof(Single))
+            {
+                Single floatyBoy = BitConverter.ToSingle(inputBytes, i);
+                if (Single.IsNaN(floatyBoy)) floatyBoy = 0f;
+                _data[_counter, _packetCounter] = floatyBoy;
+                if (++_counter >= _packetSize)
+                {
+                    _packetCounter++;
+                    _counter = 0;
+                }
+                if (_packetCounter == _packetNumber)
+                {
+                    // print results
+                    long elapsedTime = (DateTime.Now.Ticks - _startTime) / 10000;
+                    double packetsPerSecond = _packetNumber / (elapsedTime / 1000.0);
+                    double averageDeviationPercent = 0;
+                    StringBuilder sb = new StringBuilder();
+                    for (int j = 0; j < _packetSize; j++)
+                    {
+                        double sum = 0;
+                        for (int k = 0; k < _packetNumber; k++)
+                        {
+                            sum += _data[j, k];
+                        }
+                        double average = sum / _packetNumber;
+                        if (average == 0) average = 0.0000000000001;
+                        double deviationPercent = 0;
+                        for (int k = 0; k < _packetNumber; k++)
+                        {
+                            deviationPercent += (Math.Abs(_data[j, k] - average) / average);
+                        }
+                        averageDeviationPercent += (deviationPercent / _packetSize);
+                        sb.Append("Value " + (j+1) + " average: " + deviationPercent + "\n");
+                    }
+                    Console.WriteLine($"PacketSize: {_packetSize}" +
+                        $", Average deviation: {averageDeviationPercent}" +
+                        $", PackerNumber: {_packetNumber}" +
+                        $", Time: {elapsedTime}ms" +
+                        $", Packets/s: {packetsPerSecond}\n" +
+                        $"{sb}");
+                    // clear data and prepare next run
+                    _packetCounter = 0;
+                    _packetSize++;
+                    if (_packetSize > _maxPacketSize)
+                    {
+                        Console.WriteLine("ErrorCounter: "+_errorCounter);
+                        Application.Exit();
+                    }
+                    Console.WriteLine("New run");
+                    _startTime = DateTime.Now.Ticks;
+                    _data = new double[_packetSize, _packetNumber];
+                }
+            }
+
+            //if (_counter == 0) {
+            //    _startTime = DateTime.Now.Ticks;
+            //}
+            //if (_counter == _packetNumber)
+            //{
+            //    long endTime = DateTime.Now.Ticks;
+            //    Console.WriteLine("Time: " + (endTime - _startTime) / 10000 + "ms (" + _startTime + " - " + endTime + "), Packets: " + _counter);
+            //    Console.WriteLine("Packets per second: " + _packetNumber / (((double)endTime - _startTime) / 10000) * 1000);
+            //    _counter = -1;
+            //}
+            //_counter++;
 
             //printBuffer(args.CharacteristicValue);
         }
@@ -337,7 +414,7 @@ namespace Blauzahn
             var services = result.Services;
             foreach (var service in services)
             {
-                Console.WriteLine("Service: " + service.Uuid + " - " + service.Device.Name + " - " + service.Device.DeviceId);
+                Console.WriteLine("Service: " + service.Uuid + " - " + service.Session.ToString() + " - " + service.Session.DeviceId);
                 // check if the device has the battery service -- used by LPMS to transfer data
                 // TODO: add a switch / interface to handle different services (optional: based on user input)
                 //if (service.Uuid.ToString().StartsWith(BATTERY_SERVICE_UUID_PREFIX))
@@ -372,11 +449,11 @@ namespace Blauzahn
                             SubscribeToAcceptedCharacteristic(characteristic);
                         }
                     }
-                    if (characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Read))
-                    {
-                        var data = await characteristic.ReadValueAsync();
-                        printBuffer(data.Value);
-                    }
+                    //if (characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Read))
+                    //{
+                    //    var data = await characteristic.ReadValueAsync();
+                    //    printBuffer(data.Value);
+                    //}
                     // write / read characteristics here if necessary
                 }
             }
@@ -399,9 +476,17 @@ namespace Blauzahn
             try
             {
                 int index = BluetoothDevicesListBox.SelectedIndex;
-                if (index > -1 && index < BluetoothDevicesListBox.Items.Count)
+                if (index > -1 && index < BluetoothDevicesListBox.Items.Count && BluetoothDevicesListBox.SelectedItem != null)
                 {
                     deviceInfo = (DeviceInformation)BluetoothDevicesListBox.SelectedItem;
+                }
+                foreach (DeviceInformation information in devices)
+                {
+                    if (information.Name.StartsWith("LPMS"))
+                    {
+                        deviceInfo = information;
+                        break;
+                    }
                 }
             }
             catch (IndexOutOfRangeException) { }
