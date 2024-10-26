@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -55,30 +56,27 @@ namespace Blauzahn
                         break;
                 }
             };
-            //devices.CollectionChanged += UpdateDevicesListBox;
         }
 
-        //private void UpdateDevicesListBox(object sender, NotifyCollectionChangedEventArgs e)
-        //{
-        //    // TODO: find a way to bind the list to the listbox without reloading the entire list each time
-        //    // TODO: this currently only updates when elements are added, removed or replaced but NOT when elements are updated
-        //    BluetoothDevicesListBox.DataSource = null;
-        //    BluetoothDevicesListBox.DataSource = devicesView;
-        //}
-
+        /// <summary>
+        /// update method for adding new items to the viewData
+        /// </summary>
+        /// <param name="newItems"></param>
         private void AddNewItemsToViewData(IList newItems)
         {
-            Console.WriteLine("Adding new items to view data");
             foreach (DeviceInformation device in newItems)
             {
                 if (IsMatchingFilter(device.Name))
                 {
-                    Console.WriteLine("Adding device to view data: " + device.Name);
                     devicesView.Add(device);
                 }
             }
         }
 
+        /// <summary>
+        /// update method for removing old items from the viewData
+        /// </summary>
+        /// <param name="oldItems"></param>
         private void RemoveOldItemsFromViewData(IList oldItems)
         {
             foreach (DeviceInformation device in oldItems)
@@ -90,6 +88,11 @@ namespace Blauzahn
             }
         }
 
+        /// <summary>
+        /// currently this only makes sure the name is not null or empty
+        /// </summary>
+        /// <param name="name">name of the bluetooth LE device</param>
+        /// <returns></returns>
         private bool IsMatchingFilter(string name)
         {
             if (sensorNamesTextBox.Lines.Length == 0)
@@ -105,12 +108,21 @@ namespace Blauzahn
             }
             return false;
         }
+
+        /// <summary>
+        /// determines what is shown in the listbox as the items representation
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e">args of the event</param>
         private void ListBox_Format(object sender, ListControlConvertEventArgs e)
         {
             var deviceInfo = (DeviceInformation)e.ListItem;
             e.Value = deviceInfo.Name;
         }
 
+        /// <summary>
+        /// binds the devicesView updates to the listbox
+        /// </summary>
         private void BindDevicesViewToListBox()
         {
             if (BluetoothDevicesListBox.InvokeRequired)
@@ -130,44 +142,11 @@ namespace Blauzahn
                 BluetoothDevicesListBox.DataSource = null;
                 BluetoothDevicesListBox.DataSource = devicesView;
             };
-            //devicesView.CollectionChanged += (s, e) =>
-            //{
-            //    //Console.Write("Devices collection changed: " + e.Action + ", New Items: ");
-            //    //if (e.NewItems != null)
-            //    //{
-            //    //    foreach (DeviceInformation device in e.NewItems)
-            //    //    {
-            //    //        Console.Write(device.Name + ", ");
-            //    //    }
-            //    //}
-            //    //Console.Write(", Old Items: ");
-            //    //if (e.OldItems != null)
-            //    //{
-            //    //    foreach (DeviceInformation device in e.OldItems)
-            //    //    {
-            //    //        Console.Write(device.Name + ", ");
-            //    //    }
-            //    //}
-            //    //Console.WriteLine();
-            //    if (BluetoothDevicesListBox.InvokeRequired)
-            //    {
-            //        BluetoothDevicesListBox.Invoke(new MethodInvoker(delegate
-            //        {
-            //            UpdateDevicesListBox();
-            //        }));
-            //    }
-            //    else
-            //    {
-            //        UpdateDevicesListBox();
-            //    }
-            //};
         }
 
-        private void BluetoothDevicesListBox_Format(object sender, ListControlConvertEventArgs e)
-        {
-            throw new NotImplementedException();
-        }
-
+        /// <summary>
+        /// populates the output combobox with the available options and sets the default value (CSV)
+        /// </summary>
         private void PopulateOutputComboBox()
         {
             saveFormatComboBox.Items.Add("CSV");
@@ -175,6 +154,10 @@ namespace Blauzahn
             saveFormatComboBox.SelectedIndex = 0;
         }
 
+        /// <summary>
+        /// creates a new DeviceWatcher for Bluetooth LE devices and adds all necessary event handlers
+        /// </summary>
+        /// <returns></returns>
         private DeviceWatcher CreateBLEWatcher()
         {
             // Query for extra properties you want returned
@@ -199,9 +182,14 @@ namespace Blauzahn
             return watcher;
         }
 
+        /// <summary>
+        /// adds any device found by the deviceWatcher to the devices list
+        /// happens when the watcher starts or the device comes into range
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="args"></param>
         private void DeviceWatcher_Added(DeviceWatcher sender, DeviceInformation args)
         {
-            Console.WriteLine("DeviceWatcher_Added: " + args.Name + " - " + args.Id);
             if (IsNamed(args.Name))
             {
                 devices.Add(args);
@@ -218,6 +206,12 @@ namespace Blauzahn
             return name != null && name != "";
         }
 
+        /// <summary>
+        /// updates the device information for the first device in the list that has the same id as the args
+        /// happens when the device is still in range but has changed
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="args"></param>
         private void DeviceWatcher_Updated(DeviceWatcher sender, DeviceInformationUpdate args)
         {
             if (devices.Any(d => d.Id == args.Id))
@@ -226,6 +220,12 @@ namespace Blauzahn
             }
         }
 
+        /// <summary>
+        /// removes the device with the same id as the args from the devices list
+        /// happens when the device is no longer in range
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="args"></param>
         private void DeviceWatcher_Removed(DeviceWatcher sender, DeviceInformationUpdate args)
         {
             if (devices.Any(d => d.Id == args.Id))
@@ -246,7 +246,9 @@ namespace Blauzahn
         //    throw new NotImplementedException();
         //}
 
-        int _counter = 0;
+
+        // this is just a ruderimental test for the data processing
+        int _packetIndex = 0;
         long _startTime;
         int _packetCounter = 0;
         static int _packetNumber = 1111;
@@ -261,18 +263,19 @@ namespace Blauzahn
                 _errorCounter++;
                 return;
             }
+            // this how to read the values from the args
             DataReader reader = DataReader.FromBuffer(args.CharacteristicValue);
             byte[] inputBytes = new byte[reader.UnconsumedBufferLength];
             reader.ReadBytes(inputBytes);
+            // proceed with the data as needed...
             for (int i = 0; i < inputBytes.Length; i += sizeof(Single))
             {
                 Single floatyBoy = BitConverter.ToSingle(inputBytes, i);
-                if (Single.IsNaN(floatyBoy)) floatyBoy = 0f;
-                _data[_counter, _packetCounter] = floatyBoy;
-                if (++_counter >= _packetSize)
+                _data[_packetIndex, _packetCounter] = floatyBoy;
+                if (++_packetIndex >= _packetSize)
                 {
                     _packetCounter++;
-                    _counter = 0;
+                    _packetIndex = 0;
                 }
                 if (_packetCounter == _packetNumber)
                 {
@@ -284,55 +287,59 @@ namespace Blauzahn
                     for (int j = 0; j < _packetSize; j++)
                     {
                         double sum = 0;
+                        double backup = 0;
                         for (int k = 0; k < _packetNumber; k++)
                         {
+                            backup = sum;
                             sum += _data[j, k];
+                            if (Double.IsNaN(sum))
+                            {
+                                sum = backup;
+                            }
                         }
                         double average = sum / _packetNumber;
-                        if (average == 0) average = 0.0000000000001;
-                        double deviationPercent = 0;
+                        // avoid division by zero (smallest possible double value)
+                        if (average == 0) average = 2.225E-307;
+                        double deviationPercent = 0.0;
                         for (int k = 0; k < _packetNumber; k++)
                         {
-                            deviationPercent += (Math.Abs(_data[j, k] - average) / average);
+                            // catch / skip errorinous values
+                            backup = deviationPercent;
+                            deviationPercent += (Math.Abs(_data[j, k] - average));
+                            if (Double.IsNaN(deviationPercent))
+                            {
+                                deviationPercent = backup;
+                            }
                         }
+                        deviationPercent = ((deviationPercent / average) / _packetNumber) * 100;
                         averageDeviationPercent += (deviationPercent / _packetSize);
-                        sb.Append("Value " + (j+1) + " average: " + deviationPercent + "\n");
+                        sb.Append("Value " + (j+1) + " average deviation: " + deviationPercent.ToString("#.000") + "%\n");
                     }
-                    Console.WriteLine($"PacketSize: {_packetSize}" +
+                    Console.WriteLine($"PacketSize (number of floats): {_packetSize}" +
                         $", Average deviation: {averageDeviationPercent}" +
                         $", PackerNumber: {_packetNumber}" +
                         $", Time: {elapsedTime}ms" +
                         $", Packets/s: {packetsPerSecond}\n" +
                         $"{sb}");
-                    // clear data and prepare next run
+                    // clear data and prepare next run with larger packet size
                     _packetCounter = 0;
                     _packetSize++;
                     if (_packetSize > _maxPacketSize)
                     {
                         Console.WriteLine("ErrorCounter: "+_errorCounter);
-                        Application.Exit();
                     }
-                    Console.WriteLine("New run");
+                    Console.WriteLine("New run with Packet size: " + _packetSize);
                     _startTime = DateTime.Now.Ticks;
                     _data = new double[_packetSize, _packetNumber];
                 }
             }
-
-            //if (_counter == 0) {
-            //    _startTime = DateTime.Now.Ticks;
-            //}
-            //if (_counter == _packetNumber)
-            //{
-            //    long endTime = DateTime.Now.Ticks;
-            //    Console.WriteLine("Time: " + (endTime - _startTime) / 10000 + "ms (" + _startTime + " - " + endTime + "), Packets: " + _counter);
-            //    Console.WriteLine("Packets per second: " + _packetNumber / (((double)endTime - _startTime) / 10000) * 1000);
-            //    _counter = -1;
-            //}
-            //_counter++;
-
             //printBuffer(args.CharacteristicValue);
         }
 
+        /// <summary>
+        /// prints a given buffer to the console
+        /// </summary>
+        /// <param name="buffer"></param>
         void printBuffer(IBuffer buffer)
         {
             DataReader reader = DataReader.FromBuffer(buffer);
@@ -394,7 +401,7 @@ namespace Blauzahn
             // Note: BluetoothLEDevice.FromIdAsync must be called from a UI thread because it may prompt for consent.
             // find devices that can be connected to
             BluetoothLEDevice device = await BluetoothLEDevice.FromIdAsync(deviceInfo.Id);
-            // technically this already connect to the device but also realiably filters paired devices that are not in range
+            // pairs with the device
             GattDeviceServicesResult result = await device.GetGattServicesAsync();
             // check if the device has services
             if (result.Status == GattCommunicationStatus.Success)
@@ -408,13 +415,16 @@ namespace Blauzahn
             }
         }
 
+        /// <summary>
+        /// this attempts to subscribe to the Battery service of the device (current implementation is for LPMS only)
+        /// </summary>
+        /// <param name="result"></param>
+        /// <returns></returns>
         private async Task SubscribeToDataServices(GattDeviceServicesResult result)
         {
-            Console.WriteLine("Subscribing to data services");
             var services = result.Services;
             foreach (var service in services)
             {
-                Console.WriteLine("Service: " + service.Uuid + " - " + service.Session.ToString() + " - " + service.Session.DeviceId);
                 // check if the device has the battery service -- used by LPMS to transfer data
                 // TODO: add a switch / interface to handle different services (optional: based on user input)
                 //if (service.Uuid.ToString().StartsWith(BATTERY_SERVICE_UUID_PREFIX))
@@ -425,23 +435,20 @@ namespace Blauzahn
             }
         }
 
+        /// <summary>
+        /// attempts to subscribe to the notifying characteristics of the service (current implementation is for LPMS only)
+        /// </summary>
+        /// <param name="service"></param>
+        /// <returns></returns>
         private async Task SubscribeToNotifyingCharacterristics(GattDeviceService service)
         {
-            Console.WriteLine("Subscribing to notifying characteristics");
             var characteristicsResult = await service.GetCharacteristicsAsync();
-            Console.WriteLine("Characteristics status: " + characteristicsResult.Status + ", characteristic: " + characteristicsResult.Characteristics);
             if (characteristicsResult.Status == GattCommunicationStatus.Success)
             {
                 foreach (var characteristic in characteristicsResult.Characteristics)
                 {
-                    Console.WriteLine("Characteristic Flags: Read: " + characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Read)
-                                                         +", Notify: "+ characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify)
-                                                         +", Write: "+ characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Write));
-
                     if (characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
                     {
-                        //GattWriteResult status = await characteristic.WriteClientCharacteristicConfigurationDescriptorWithResultAsync(
-                        //        GattClientCharacteristicConfigurationDescriptorValue.Notify);
                         GattCommunicationStatus status = await characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(
                             GattClientCharacteristicConfigurationDescriptorValue.Notify);
                         if (status == GattCommunicationStatus.Success)
@@ -449,11 +456,6 @@ namespace Blauzahn
                             SubscribeToAcceptedCharacteristic(characteristic);
                         }
                     }
-                    //if (characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Read))
-                    //{
-                    //    var data = await characteristic.ReadValueAsync();
-                    //    printBuffer(data.Value);
-                    //}
                     // write / read characteristics here if necessary
                 }
             }
@@ -470,6 +472,12 @@ namespace Blauzahn
             // TODO: update filter and filter devicesView with updated filter
         }
 
+        /// <summary>
+        /// connect button event handler
+        ///  is currently hardcoded to connect to the first device in the list that starts with "LPMS" for simplicity reasons (Listbox wont update correctly)
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void connectButton_Click(object sender, EventArgs e)
         {
             DeviceInformation deviceInfo = null;
