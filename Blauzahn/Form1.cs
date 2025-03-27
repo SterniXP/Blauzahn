@@ -252,24 +252,50 @@ namespace Blauzahn
         long _startTime;
         int _packetCounter = 0;
         static int _packetNumber = 1111;
-        static int _packetSize = 1;
+        static int _packetSize = 60;
         double[,] _data = new double[_packetSize, _packetNumber];
-        int _maxPacketSize = 60;
+        int _maxPacketSize = 61;
         int _errorCounter = 0;
+        byte[] _carry = new byte[0];
         void Characteristic_ValueChanged(GattCharacteristic sender, GattValueChangedEventArgs args)
         {
-            if (args.CharacteristicValue.Length != 20)
-            {
-                _errorCounter++;
-                return;
-            }
+            //if (args.CharacteristicValue.Length != 20)
+            //{
+            //    _errorCounter++;
+            //    return;
+            //}
             // this how to read the values from the args
             DataReader reader = DataReader.FromBuffer(args.CharacteristicValue);
             byte[] inputBytes = new byte[reader.UnconsumedBufferLength];
             reader.ReadBytes(inputBytes);
             // proceed with the data as needed...
+            if (_carry.Length > 0)
+            {
+                int size = _carry.Length + inputBytes.Length;
+                if (size < 4)
+                {
+                    byte[] temp = new byte[size];
+                    Array.Copy(_carry, 0, temp, 0, _carry.Length);
+                    Array.Copy(inputBytes, 0, temp, _carry.Length, inputBytes.Length);
+                    _carry = temp;
+                    return;
+                }
+                else
+                {
+                    byte[] temp = new byte[size];
+                    Array.Copy(_carry, 0, temp, 0, _carry.Length);
+                    Array.Copy(inputBytes, 0, temp, _carry.Length, inputBytes.Length);
+                    inputBytes = temp;
+                }
+            } 
             for (int i = 0; i < inputBytes.Length; i += sizeof(Single))
             {
+                if (i + sizeof(Single) > inputBytes.Length && inputBytes.Length % sizeof(Single) != 0)
+                {
+                    _carry = new byte[inputBytes.Length % sizeof(Single)];
+                    Array.Copy(inputBytes, inputBytes.Length - _carry.Length, _carry, 0, _carry.Length);
+                    return;
+                }
                 Single floatyBoy = BitConverter.ToSingle(inputBytes, i);
                 _data[_packetIndex, _packetCounter] = floatyBoy;
                 if (++_packetIndex >= _packetSize)
